@@ -12,19 +12,33 @@
       background: #000;
     }
     iframe {
-      width: 333.33vw;
-      height: 333.33vh;
+      width: 1024px;
+      height: 1060px;
       border: none;
       display: block;
-      transform: scale(0.3);
       transform-origin: top left;
     }
   </style>
+  <script>
+    function fitDashboard() {
+      const iframe = document.querySelector('iframe');
+      const scaleX = window.innerWidth / 1024;
+      const scaleY = window.innerHeight / 1060;
+      const scale = Math.min(scaleX, scaleY);
+      iframe.style.transform = 'scale(' + scale + ')';
+    }
+    window.addEventListener('load', fitDashboard);
+    window.addEventListener('resize', fitDashboard);
+  </script>
 </head>
 <body>
   <iframe
-    src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9&navContentPaneEnabled=false&filterPaneEnabled=false"
-    allowfullscreen="true">
+    title="Cinco BI"
+    width="1024"
+    height="1060"
+    src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9"
+    frameborder="0"
+    allowFullScreen="true">
   </iframe>
 </body>
 </html>
