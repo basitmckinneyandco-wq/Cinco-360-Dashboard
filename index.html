@@ -1,44 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CINCO 360</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CINCO 360° Dashboard</title>
   <style>
-    * { margin: 0; padding: 0; }
-    html, body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0c10;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .dashboard-container {
       width: 100%;
       height: 100%;
-      overflow: hidden;
-      background: #000;
+      background: #0a0c10;
     }
+
     iframe {
-      width: 1024px;
-      height: 1060px;
+      width: 100%;
+      height: 100%;
       border: none;
       display: block;
-      transform-origin: top left;
     }
   </style>
-  <script>
-    function fitDashboard() {
-      const iframe = document.querySelector('iframe');
-      const scaleX = window.innerWidth / 1024;
-      const scaleY = window.innerHeight / 1060;
-      const scale = Math.min(scaleX, scaleY);
-      iframe.style.transform = 'scale(' + scale + ')';
-    }
-    window.addEventListener('load', fitDashboard);
-    window.addEventListener('resize', fitDashboard);
-  </script>
 </head>
+
 <body>
-  <iframe
-    title="Cinco BI"
-    width="1024"
-    height="1060"
-    src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9"
-    frameborder="0"
-    allowFullScreen="true">
-  </iframe>
+  <div class="dashboard-container">
+    <iframe 
+      title="Cinco BI"
+      src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9&pageView=fitToPage&navContentPaneEnabled=false&filterPaneEnabled=false"
+      allowfullscreen>
+    </iframe>
+  </div>
 </body>
 </html>
