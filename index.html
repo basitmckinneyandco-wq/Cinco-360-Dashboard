@@ -2,56 +2,29 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CINCO 360</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
     html, body {
       width: 100%;
       height: 100%;
       overflow: hidden;
       background: #000;
     }
-    .wrapper {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-    }
     iframe {
+      width: 333.33vw;
+      height: 333.33vh;
       border: none;
-      position: absolute;
-      top: 0;
-      left: 0;
+      display: block;
+      transform: scale(0.3);
       transform-origin: top left;
-      /* Actual Power BI content area - adjusted to fill screen */
-      width: 1400px;
-      height: 3200px;
     }
   </style>
-  <script>
-    function fitDashboard() {
-      const iframe = document.querySelector('iframe');
-      const contentWidth = 1400;
-      const contentHeight = 3200;
-      // Scale to fill full screen width
-      const scale = window.innerWidth / contentWidth;
-      iframe.style.transform = 'scale(' + scale + ')';
-      // Adjust wrapper height to match scaled content
-      document.querySelector('.wrapper').style.height = (contentHeight * scale) + 'px';
-      document.body.style.overflow = 'auto';
-      document.body.style.height = 'auto';
-    }
-    window.addEventListener('load', fitDashboard);
-    window.addEventListener('resize', fitDashboard);
-  </script>
 </head>
 <body>
-  <div class="wrapper">
-    <iframe
-      src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9&navContentPaneEnabled=false&filterPaneEnabled=false"
-      allowfullscreen="true">
-    </iframe>
-  </div>
+  <iframe
+    src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9&navContentPaneEnabled=false&filterPaneEnabled=false"
+    allowfullscreen="true">
+  </iframe>
 </body>
 </html>
