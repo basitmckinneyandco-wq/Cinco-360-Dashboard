@@ -6,26 +6,19 @@
   <title>CINCO 360</title>
 
   <style>
-    * { margin: 0; padding: 0; }
-
     html, body {
-      width: 100%;
+      margin: 0;
+      padding: 0;
       height: 100%;
       overflow: hidden;
     }
 
-    .container {
+    .frame {
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
-      position: relative;
-    }
 
-    .scaled {
-      width: 111vw;
-      height: 111vh;
-      transform: scale(0.7);
-      transform-origin: top left;
+      /* 🔥 THIS is the key */
+      zoom: 0.9;
     }
 
     iframe {
@@ -37,14 +30,12 @@
 </head>
 
 <body>
-  <div class="container">
-    <div class="scaled">
-      <iframe 
-        title="Cinco BI"
-        src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9"
-        allowFullScreen="true">
-      </iframe>
-    </div>
+  <div class="frame">
+    <iframe
+      title="Cinco BI"
+      src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9"
+      allowFullScreen="true">
+    </iframe>
   </div>
 </body>
 </html>
