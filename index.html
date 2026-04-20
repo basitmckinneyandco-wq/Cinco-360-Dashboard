@@ -1,255 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>CINCO 360° | Adaptive Dashboard</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CINCO Power BI Fit View</title>
 
-    body {
-      background: #0a0c10;  /* deep neutral background, matches Power BI dark edges */
-      font-family: system-ui, 'Segoe UI', 'Roboto', sans-serif;
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-    }
+<style>
+  body {
+    margin: 0;
+    background: #0a0c10;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-    /* main container: full viewport, centers the scaled wrapper */
-    .dashboard-stage {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0a0c10;
-    }
+  .wrapper {
+    width: 1024px;
+    height: 1060px;
+    transform-origin: center center;
+  }
 
-    /* wrapper that holds the iframe with original dimensions (1024x1060) */
-    .dashboard-wrapper {
-      position: relative;
-      width: 1024px;
-      height: 1060px;
-      transform-origin: center center;  /* scale from center, looks more natural */
-      transition: transform 0.05s ease-out; /* micro-smooth resize, no lag */
-      box-shadow: 0 25px 40px -12px rgba(0,0,0,0.45);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    /* iframe styling: crisp rendering, no borders */
-    .dashboard-wrapper iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-      background: #fff;  /* fallback while loading */
-      border-radius: 12px;
-    }
-
-    /* subtle floating indicator for zoom state (optional, only for debug / user confidence) */
-    .zoom-indicator {
-      position: fixed;
-      bottom: 16px;
-      right: 20px;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-      color: #e0e0e0;
-      font-size: 12px;
-      font-family: monospace;
-      padding: 6px 12px;
-      border-radius: 40px;
-      pointer-events: none;
-      z-index: 999;
-      letter-spacing: 0.3px;
-      border: 1px solid rgba(255,255,255,0.15);
-      transition: opacity 0.2s;
-    }
-
-    /* small helper text for resize behaviour */
-    .info-tip {
-      position: fixed;
-      bottom: 16px;
-      left: 20px;
-      background: rgba(0,0,0,0.45);
-      backdrop-filter: blur(4px);
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      color: #ccc;
-      font-family: monospace;
-      pointer-events: none;
-      z-index: 999;
-    }
-
-    /* ensure on very small devices we don't get scrollbars from body */
-    @media (max-width: 640px) {
-      .zoom-indicator, .info-tip {
-        font-size: 9px;
-        bottom: 8px;
-      }
-    }
-  </style>
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+</style>
 </head>
+
 <body>
 
-<div class="dashboard-stage">
-  <div class="dashboard-wrapper" id="dashboardWrapper">
-    <!-- Power BI embed iframe - using exact dimensions from original embed code (1024x1060) 
-         and the official report link from your snippet -->
-    <iframe 
-      title="Cinco BI" 
-      src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9" 
-      frameborder="0" 
-      allowfullscreen="true">
-    </iframe>
-  </div>
+<div class="wrapper" id="wrapper">
+  <iframe 
+    title="Cinco BI"
+    src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9"
+    allowfullscreen="true">
+  </iframe>
 </div>
 
-<div class="zoom-indicator" id="zoomValueDisplay">🔍 fitting view ...</div>
-<div class="info-tip">⚡ CINCO 360° | auto-zoomed to fit window</div>
-
 <script>
-  (function() {
-    // --- REFERENCE ---
-    // Original iframe dimensions (fixed design size from Power BI)
-    const ORIG_W = 1024;
-    const ORIG_H = 1060;
-    
-    const wrapper = document.getElementById('dashboardWrapper');
-    const zoomDisplay = document.getElementById('zoomValueDisplay');
-    
-    // flag to avoid excessive DOM updates during resize (throttle)
-    let resizeTimer = null;
-    
-    // core function: compute best fit scale so the ENTIRE dashboard is visible
-    // without any scrollbars on the main window. "zoomed out" means scale <= 1 in most cases,
-    // but if window is larger than original, we optionally scale UP? user said "zoomed out"
-    // they want the full dashboard visible, not cropped. We'll always show full width/height
-    // preserving aspect ratio, so it's "letterbox" style but with black background.
-    // That guarantees NO overflow and everything is visible.
-    function updateScale() {
-      if (!wrapper) return;
-      
-      // get actual viewport dimensions (no scrollbars interference)
-      const viewW = window.innerWidth;
-      const viewH = window.innerHeight;
-      
-      // compute needed scale to fit ENTIRE content inside viewport
-      // scale based on width: viewW / ORIG_W
-      // scale based on height: viewH / ORIG_H
-      const scaleX = viewW / ORIG_W;
-      const scaleY = viewH / ORIG_H;
-      
-      // choose the smaller scale to ensure both dimensions fit without overflow
-      // this guarantees the full 1024x1060 dashboard is always visible, zoomed out if necessary
-      let scale = Math.min(scaleX, scaleY);
-      
-      // Optional: if scale is extremely tiny (like on very narrow screens) keep it but we clamp no lower than 0.2
-      // but practically fine. Also if scale > 1 (window bigger than original), we could decide to keep at 1.0
-      // to avoid upscaling blur? But user expects full view: if window larger, we can upscale slightly but
-      // it remains fully visible (no cropping). Usually "zoomed out" feeling comes from being able to see everything.
-      // However to prevent massive pixelation we can cap scale at 1.0, BUT that would introduce black margins.
-      // The requirement says: "it opens zoomed out right now it opens 100% so i want it opens zoomed out"
-      // That indicates that on large screens the dashboard appears too big (needs scrolling). So we FORCE scale <= 1.
-      // BUT even if viewport is larger than original, we could set scale to 1 and center it — still fully visible.
-      // But sometimes users expect the whole canvas to shrink to fit. Let's adopt standard "contain" behavior:
-      // If window is bigger than original content, we keep scale=1.0 (no zoom out, just centered).
-      // That's still fully visible because original fits inside bigger window. The problem appears when window is smaller.
-      // However, user complained "it opens 100% so i want it opens zoomed out" → probably on laptop/desktop the PowerBI
-      // default embed overflows horizontally/vertically. So we enforce that the scale never makes the wrapper exceed viewport.
-      // To be safe: we always apply min(scaleX, scaleY) but also if scale > 1 we set to 1? Let's think:
-      // If scale > 1, that means viewport is larger than dashboard original size → no zoom out needed, dashboard appears at 100%
-      // but that's still fully visible. That is not a "zoomed out" problem. The main issue is when window is smaller,
-      // we must zoom out to show whole thing. But also on window larger than 1024x1060, we keep scale=1 to avoid blur.
-      // but to fulfill "zoomed out" (always see entire dashboard without scroll), we must ensure that in any case
-      // there is no overflow. If viewport larger and scale=1, no overflow. So perfect.
-      // However some users have weird ratio: we keep logic: scale = Math.min(scaleX, scaleY); if(scale > 1) scale = 1;
-      // But what if monitor is extremely wide but not tall? Then scale determined by height might be <1 and good.
-      // Let's add the improvement: Always fit inside, but never scale above 1 (preserves sharpness).
-      // But there's also the case where both dimensions are bigger but one dimension slightly bigger? Actually if both
-      // dimensions are bigger, scaleX>1 and scaleY>1 then min>1, we cap to 1 -> dashboard shows at 1:1, still fully visible.
-      // That matches expectation.
-      if (scale > 1) {
-        scale = 1;
-      }
-      
-      // apply transform: we need to center the wrapper when scale < 1 or even at scale=1 (centering via flex already)
-      // Because we use flex centering on .dashboard-stage, the wrapper stays centered regardless of scale.
-      // However, when scaling down, the transform origin "center center" makes it shrink from the middle.
-      // But due to flex alignment, the wrapper's bounding box shrinks and remains centered automatically.
-      // This produces a perfect "letterbox" zoom-out effect.
-      wrapper.style.transform = `scale(${scale})`;
-      
-      // Additional refinement: for extremely tiny scale, we could adjust border radius, but not necessary.
-      // show current scale factor in indicator (as percentage of original size)
-      const percent = Math.round(scale * 100);
-      zoomDisplay.innerHTML = `🔍 ${percent}% · full dashboard view`;
-      
-      // optional: if scale is exactly 1, show hint "original size (fits)"
-      if (scale === 1) {
-        zoomDisplay.innerHTML = `📐 100% · fully visible (no zoom out needed)`;
-      } else if (scale < 0.65) {
-        zoomDisplay.innerHTML = `🔍 ${percent}% · zoomed out to fit entire dashboard`;
-      }
-    }
-    
-    // debounced resize handler to avoid performance issues and flicker
-    function handleResize() {
-      if (resizeTimer) clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        updateScale();
-        resizeTimer = null;
-      }, 30);
-    }
-    
-    // also watch for orientation changes and fullscreen changes
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', () => {
-      // small delay for browser to update window dimensions
-      setTimeout(updateScale, 20);
-    });
-    
-    // in case the iframe loads dynamic content or fonts cause layout shift, re-run after short delay
-    // also ensure the iframe is fully rendered, and power bi might inject elements but container dimensions stable.
-    window.addEventListener('load', () => {
-      updateScale();
-      // extra insurance after 200ms (some browsers need repaint)
-      setTimeout(updateScale, 150);
-      setTimeout(updateScale, 500);
-    });
-    
-    // also observe any possible changes in iframe size? no, container stays fixed.
-    // initial call
-    updateScale();
-    
-    // if there is any strange zoom due to device pixel ratio, not needed.
-    // additionally, we can use ResizeObserver for container but not necessary.
-    // Provide a manual re-trigger by clicking on indicator? (optional nice UX)
-    if (zoomDisplay) {
-      zoomDisplay.style.cursor = 'pointer';
-      zoomDisplay.addEventListener('click', () => {
-        updateScale();
-        // visual feedback
-        zoomDisplay.style.opacity = '0.7';
-        setTimeout(() => { if(zoomDisplay) zoomDisplay.style.opacity = '1'; }, 200);
-      });
-    }
-    
-    // also ensure that if user toggles fullscreen, the scaling updates
-    document.addEventListener('fullscreenchange', () => {
-      setTimeout(updateScale, 50);
-    });
-    
-    // Edge case: some browsers have dynamic toolbar, re-run after scroll or interaction? 
-    // not needed, but window resize covers it.
-    console.log('CINCO 360 adaptive scaling active — dashboard will always fit viewport, zoomed out when needed');
-  })();
+  const BASE_W = 1024;
+  const BASE_H = 1060;
+
+  const wrapper = document.getElementById("wrapper");
+
+  function fit() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const scaleX = vw / BASE_W;
+    const scaleY = vh / BASE_H;
+
+    let scale = Math.min(scaleX, scaleY);
+
+    // prevent upscaling (keeps it "zoomed out feel")
+    if (scale > 1) scale = 1;
+
+    wrapper.style.transform = `scale(${scale})`;
+  }
+
+  window.addEventListener("resize", fit);
+  window.addEventListener("load", fit);
+
+  fit();
 </script>
+
 </body>
 </html>
