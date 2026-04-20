@@ -34,7 +34,7 @@
     function fitDashboard() {
       const iframe = document.querySelector('iframe');
       const scaleX = window.innerWidth / 1024;
-      const scaleY = window.innerHeight / 804;
+      const scaleY = window.innerHeight / 1000;
       const scale = Math.min(scaleX, scaleY);
       iframe.style.transform = 'scale(' + scale + ')';
     }
@@ -46,7 +46,7 @@
   <iframe
     title="Cinco BI"
     width="1024"
-    height="804"
+    height="1000"
     src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9"
     frameborder="0"
     allowFullScreen="true">
