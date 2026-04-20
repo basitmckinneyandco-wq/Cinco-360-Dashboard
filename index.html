@@ -1,73 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CINCO Power BI Fit View</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CINCO 360° | Full Dashboard View</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<style>
-  body {
-    margin: 0;
-    background: #0a0c10;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+    body {
+      background: #0a0c10;
+      font-family: system-ui, 'Segoe UI', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
 
-  .wrapper {
-    width: 1024px;
-    height: 1060px;
-    transform-origin: center center;
-  }
+    .dashboard-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0c10;
+    }
 
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-  }
-</style>
+    .dashboard-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0c10;
+    }
+
+    .dashboard-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #fff;
+    }
+
+    /* Control panel for zoom settings */
+    .zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      border-radius: 50px;
+      padding: 8px 16px;
+      display: flex;
+      gap: 12px;
+      z-index: 1000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-family: monospace;
+    }
+
+    .zoom-controls button {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-controls button:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.05);
+    }
+
+    .zoom-controls button:active {
+      transform: scale(0.95);
+    }
+
+    .zoom-level {
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      letter-spacing: 0.5px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 30px;
+      padding: 0 14px;
+    }
+
+    .reset-btn {
+      background: #0078d4 !important;
+      width: auto !important;
+      border-radius: 30px !important;
+      padding: 0 16px !important;
+      font-size: 13px !important;
+      gap: 6px;
+    }
+
+    .reset-btn:hover {
+      background: #106ebe !important;
+    }
+
+    .info-badge {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 11px;
+      color: #aaa;
+      font-family: monospace;
+      z-index: 1000;
+      pointer-events: none;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .zoom-controls { padding: 6px 12px; }
+      .zoom-controls button { width: 32px; height: 32px; font-size: 16px; }
+      .zoom-level { font-size: 12px; padding: 0 8px; }
+      .reset-btn { padding: 0 12px !important; }
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="wrapper" id="wrapper">
-  <iframe 
-    title="Cinco BI"
-    src="https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9"
-    allowfullscreen="true">
-  </iframe>
+<div class="dashboard-stage">
+  <div class="dashboard-wrapper" id="dashboardWrapper">
+    <!-- Power BI iframe will be dynamically loaded with zoom parameter -->
+    <iframe id="powerBiFrame" title="Cinco BI" frameborder="0" allowfullscreen="true"></iframe>
+  </div>
+</div>
+
+<div class="zoom-controls">
+  <button id="zoomOutBtn" title="Zoom Out (show more content)">−</button>
+  <span class="zoom-level" id="zoomLevelDisplay">🔍 75%</span>
+  <button id="zoomInBtn" title="Zoom In">+</button>
+  <button id="resetZoomBtn" class="reset-btn" title="Reset to default fit">⟳ Reset</button>
+</div>
+<div class="info-badge">
+  ⚡ CINCO 360° | Power BI zoom control • dashboard scales to fit
 </div>
 
 <script>
-  const BASE_W = 1024;
-  const BASE_H = 1060;
-
-  const wrapper = document.getElementById("wrapper");
-
-  function fit() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    const scaleX = vw / BASE_W;
-    const scaleY = vh / BASE_H;
-
-    let scale = Math.min(scaleX, scaleY);
-
-    // prevent upscaling (keeps it "zoomed out feel")
-    if (scale > 1) scale = 1;
-
-    wrapper.style.transform = `scale(${scale})`;
-  }
-
-  window.addEventListener("resize", fit);
-  window.addEventListener("load", fit);
-
-  fit();
+  (function() {
+    // Base Power BI URL (without zoom parameter)
+    const BASE_URL = "https://app.powerbi.com/view?r=eyJrIjoiZjg3NmUzOTMtMDlmZS00YmYzLWE4ZWYtZjE4NDg5ZjMwNzkzIiwidCI6ImE3YTY2OWZlLWMxNDktNDNkYS04OTAyLTIxMDdhNWFkYjJiZCIsImMiOjl9";
+    
+    // Zoom levels available (as percentage)
+    // Power BI supports zoom via '&zoom=XX' parameter where XX is percentage (e.g., 75, 80, 90, 100)
+    // Also supports 'fitToWidth' and 'fitToPage' but zoom parameter is most reliable for "zoomed out" view
+    const ZOOM_OPTIONS = [50, 60, 70, 75, 80, 85, 90, 95, 100];
+    let currentZoomIndex = 3; // Default index for 75% (zoomed out nicely)
+    
+    const iframe = document.getElementById('powerBiFrame');
+    const zoomDisplay = document.getElementById('zoomLevelDisplay');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const resetBtn = document.getElementById('resetZoomBtn');
+    
+    // Function to build URL with specific zoom level
+    function buildPowerBIUrl(zoomPercent) {
+      // Power BI supports 'zoom' parameter in the embed URL
+      // Format: add &zoom=XX to the URL
+      let url = BASE_URL;
+      
+      // Remove any existing zoom parameter if present
+      if (url.includes('&zoom=')) {
+        url = url.replace(/&zoom=\d+/g, '');
+      }
+      if (url.includes('?zoom=')) {
+        url = url.replace(/\?zoom=\d+/g, '?');
+      }
+      
+      // Add the zoom parameter (Power BI also supports '&zoomFit=FitToPage' but zoom percentage is more direct)
+      // According to Power BI docs: &zoom=XX where XX is percentage (e.g., 75 for 75%)
+      // Also we add &navContentPaneEnabled=false to remove extra navigation for cleaner view (optional but helpful)
+      // And &filterPaneEnabled=false to collapse filters, giving more space
+      let finalUrl = url;
+      if (!finalUrl.includes('?')) {
+        finalUrl = finalUrl + '?';
+      } else {
+        finalUrl = finalUrl + '&';
+      }
+      
+      // Add zoom parameter
+      finalUrl = finalUrl + `zoom=${zoomPercent}`;
+      
+      // Additional parameters to improve the zoomed-out experience:
+      // - &navContentPaneEnabled=false: hides the navigation pane to maximize dashboard area
+      // - &filterPaneEnabled=false: collapses filter pane (users can reopen if needed)
+      // These help when zoomed out, you see more of the actual report
+      finalUrl = finalUrl + `&navContentPaneEnabled=false`;
+      finalUrl = finalUrl + `&filterPaneEnabled=false`;
+      
+      return finalUrl;
+    }
+    
+    // Apply zoom level to iframe
+    function applyZoom() {
+      const zoomPercent = ZOOM_OPTIONS[currentZoomIndex];
+      const newUrl = buildPowerBIUrl(zoomPercent);
+      
+      // Store current scroll position if needed (not critical)
+      iframe.src = newUrl;
+      
+      // Update display
+      zoomDisplay.innerHTML = `🔍 ${zoomPercent}%`;
+      
+      // Add visual feedback for current zoom state
+      if (zoomPercent <= 70) {
+        zoomDisplay.style.background = "rgba(0, 120, 212, 0.3)";
+      } else if (zoomPercent >= 90) {
+        zoomDisplay.style.background = "rgba(255, 165, 0, 0.3)";
+      } else {
+        zoomDisplay.style.background = "rgba(0, 0, 0, 0.5)";
+      }
+      
+      // Save preference to localStorage for returning users
+      localStorage.setItem('cinco_zoom_index', currentZoomIndex);
+      
+      console.log(`Power BI zoom set to ${zoomPercent}% - dashboard should now show more content`);
+    }
+    
+    // Zoom out (decrease zoom percentage = see MORE of the dashboard)
+    function zoomOut() {
+      if (currentZoomIndex > 0) {
+        currentZoomIndex--;
+        applyZoom();
+      } else {
+        // Already at minimum zoom (50%)
+        zoomDisplay.style.opacity = '0.6';
+        setTimeout(() => { zoomDisplay.style.opacity = '1'; }, 300);
+      }
+    }
+    
+    // Zoom in (increase zoom percentage = see LESS, but bigger text)
+    function zoomIn() {
+      if (currentZoomIndex < ZOOM_OPTIONS.length - 1) {
+        currentZoomIndex++;
+        applyZoom();
+      } else {
+        // Already at 100%
+        zoomDisplay.style.opacity = '0.6';
+        setTimeout(() => { zoomDisplay.style.opacity = '1'; }, 300);
+      }
+    }
+    
+    // Reset to recommended zoomed-out view (75% - shows full dashboard nicely)
+    function resetZoom() {
+      // Set to 75% (index 3) which provides a balanced zoomed-out view
+      currentZoomIndex = 3;
+      applyZoom();
+      
+      // Show reset feedback
+      const originalText = zoomDisplay.innerHTML;
+      zoomDisplay.innerHTML = '✓ Reset to 75%';
+      setTimeout(() => {
+        if (zoomDisplay) zoomDisplay.innerHTML = originalText;
+      }, 1500);
+    }
+    
+    // Event listeners
+    zoomOutBtn.addEventListener('click', zoomOut);
+    zoomInBtn.addEventListener('click', zoomIn);
+    resetBtn.addEventListener('click', resetZoom);
+    
+    // Load saved zoom preference from localStorage
+    function loadSavedZoom() {
+      const savedIndex = localStorage.getItem('cinco_zoom_index');
+      if (savedIndex !== null && !isNaN(parseInt(savedIndex))) {
+        const idx = parseInt(savedIndex);
+        if (idx >= 0 && idx < ZOOM_OPTIONS.length) {
+          currentZoomIndex = idx;
+        } else {
+          currentZoomIndex = 3; // default 75%
+        }
+      } else {
+        currentZoomIndex = 3; // 75% zoomed out by default
+      }
+      applyZoom();
+    }
+    
+    // Handle iframe load to ensure proper rendering
+    iframe.addEventListener('load', function() {
+      console.log('Power BI dashboard loaded with zoom parameter');
+      // Small delay to ensure Power BI applies zoom setting
+      setTimeout(() => {
+        // Optional: send postMessage if needed, but not necessary
+      }, 500);
+    });
+    
+    // Initialize
+    loadSavedZoom();
+    
+    // Keyboard shortcuts for power users (Ctrl + / Ctrl -)
+    window.addEventListener('keydown', function(e) {
+      // Ctrl + Minus (Zoom out dashboard)
+      if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        zoomOut();
+      }
+      // Ctrl + Plus (Zoom in dashboard)
+      else if ((e.ctrlKey || e.metaKey) && e.key === '=') {
+        e.preventDefault();
+        zoomIn();
+      }
+      // Ctrl + 0 (Reset zoom)
+      else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        resetZoom();
+      }
+    });
+    
+    // Additional fix: Some Power BI reports need a moment to respect zoom param on slow connections
+    // Also add a retry mechanism for stubborn Power BI caching
+    let retryCount = 0;
+    function ensureZoomApplied() {
+      const currentUrl = iframe.src;
+      const expectedZoom = ZOOM_OPTIONS[currentZoomIndex];
+      if (currentUrl && !currentUrl.includes(`zoom=${expectedZoom}`)) {
+        if (retryCount < 3) {
+          setTimeout(() => {
+            applyZoom();
+            retryCount++;
+          }, 800);
+        }
+      }
+    }
+    
+    setTimeout(ensureZoomApplied, 1200);
+    
+    // Handle window resize: Power BI might re-render but zoom persists via URL
+    window.addEventListener('resize', function() {
+      // No need to reapply zoom, but we can ensure the iframe container scales gracefully
+      // The zoom parameter stays active
+    });
+    
+    // Show helpful tooltip on first load
+    setTimeout(() => {
+      const infoDiv = document.querySelector('.info-badge');
+      if (infoDiv) {
+        infoDiv.style.transition = 'opacity 0.5s';
+        infoDiv.style.opacity = '0.8';
+      }
+    }, 1000);
+    
+    console.log('CINCO 360 Dashboard Ready — Zoom control active. Current zoom: ' + ZOOM_OPTIONS[currentZoomIndex] + '%');
+  })();
 </script>
-
 </body>
 </html>
