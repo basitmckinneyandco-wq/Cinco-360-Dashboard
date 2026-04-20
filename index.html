@@ -18,22 +18,21 @@
       position: relative;
     }
     iframe {
-      width: 1600px;
-      height: 900px;
+      width: 2370px;
+      height: 3200px;
       border: none;
       position: absolute;
       top: 0;
       left: 0;
       transform-origin: top left;
-      transform: scale(var(--scale));
     }
   </style>
   <script>
     function fitDashboard() {
-      const scaleX = window.innerWidth / 1600;
-      const scaleY = window.innerHeight / 900;
+      const scaleX = window.innerWidth / 2370;
+      const scaleY = window.innerHeight / 3200;
       const scale = Math.min(scaleX, scaleY);
-      document.documentElement.style.setProperty('--scale', scale);
+      document.querySelector('iframe').style.transform = 'scale(' + scale + ')';
     }
     window.addEventListener('load', fitDashboard);
     window.addEventListener('resize', fitDashboard);
